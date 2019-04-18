@@ -1,0 +1,117 @@
+{
+
+ "children": [
+  {
+   "hero": "Romare Bearden",
+   "id": "p1",
+   "img": "https://idscache.harvardartmuseums.org/ids/view/43183964?width=2400",
+   "children": [
+    {
+      "hero": "Pablo Ruiz Picasso",
+      "score": "5",
+      "id": "p2",
+      "img":  "https://s3.amazonaws.com/apps.harvardartmuseums.org/Otherness/20413859.jpg",
+      "size": 400000
+    },
+    {
+      "hero": "George Grosz",
+      "score": "5",
+      "id": "p3",
+      "img":  "https://s3.amazonaws.com/apps.harvardartmuseums.org/Otherness/400098221.jpg",
+      "size": 400000
+    },
+    {
+      "hero": "Jose Clemente Orozco",
+      "score": "4",
+      "id": "p4",
+      "img":  "https://s3.amazonaws.com/apps.harvardartmuseums.org/Otherness/20685253.jpg",
+      "size": 400000
+    }
+  ]
+  },
+  {
+   "hero": "Lorna Simpson",
+   "id": "p5",
+   "img": "https://idscache.harvardartmuseums.org/ids/view/406932133?width=2000",
+   "children": [
+    {
+      "hero": "KiKi Smith",
+      "score": "3",
+      "id": "p6",
+      "img":  "https://s3.amazonaws.com/apps.harvardartmuseums.org/Otherness/43182801.jpg",
+      "size": 400000
+    },
+    {
+      "hero": "Roy DeCarava",
+      "score": "1",
+      "id": "p7",
+      "img":  "https://s3.amazonaws.com/apps.harvardartmuseums.org/Otherness/18779930.jpg",
+      "size": 400000
+    },
+    {
+      "hero": "Adrian Piper",
+      "score": "4",
+      "id": "p8",
+      "img":  "https://s3.amazonaws.com/apps.harvardartmuseums.org/Otherness/20426769.jpg",
+      "size": 400000
+    }
+   ]
+  },
+  {
+   "hero": "Leonardo Drew",
+   "id": "p9",
+   "img": "https://idscache.harvardartmuseums.org/ids/view/23964516?width=2000",
+   "children": [
+    {
+      "hero": "Piet Mondrian",
+      "score": "5",
+      "id": "p10",
+      "img":  "https://s3.amazonaws.com/apps.harvardartmuseums.org/Otherness/43183738.jpg",
+      "size": 400000
+    },
+    {
+      "hero": "Eva Hesse",
+      "score": "2",
+      "id": "p11",
+      "img":  "https://s3.amazonaws.com/apps.harvardartmuseums.org/Otherness/20683549.jpg",
+      "size": 400000
+    },
+    {
+      "hero": "Jackson Pollack",
+      "score": "5",
+      "id": "p12",
+      "img":  "https://s3.amazonaws.com/apps.harvardartmuseums.org/Otherness/43183492.jpg",
+      "size": 400000
+    }
+  ]
+},
+    {
+      "hero": "Ellen Gallagher",
+      "id": "p13",
+      "img": "https://idscache.harvardartmuseums.org/ids/view/18773545?width=2000",
+      "children": [
+    {
+      "hero": "Eva Hesse",
+      "score": "1",
+      "id": "p14",
+      "img":  "https://s3.amazonaws.com/apps.harvardartmuseums.org/Otherness/17825737.jpg",
+      "size": 400000
+    },
+    {
+      "hero": "Agnes Martin",
+      "score": "2",
+      "id": "p15",
+      "img":  "https://s3.amazonaws.com/apps.harvardartmuseums.org/Otherness/20426496.jpg",
+      "size": 400000
+    },
+    {
+      "hero": "Sol LeWitt",
+      "score": "2",
+      "id": "p16",
+      "img":  "https://s3.amazonaws.com/apps.harvardartmuseums.org/Otherness/18759073.jpg",
+      "size": 400000
+    }
+  ]
+}
+]
+}

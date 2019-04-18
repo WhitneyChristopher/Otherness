@@ -1,0 +1,488 @@
+    <header>
+    </header>
+    <!-- container for force layout visualisation  -->
+    <section id="vis"></section>
+<script>
+
+// some colour variables
+  var tcBlack = "#130C0E";
+
+// rest of vars
+var w = 5760,
+    h = 3240,
+    maxNodeSize = 200,
+    x_browser = 50,
+    y_browser = 75,
+    root;
+
+var vis;
+var force = d3.layout.force();
+
+vis = d3.select("#vis").append("svg").attr("width", w).attr("height", h);
+
+d3.json("marvel.json", function(json) {
+
+  root = json;
+  root.fixed = true;
+  root.x = w / 2;
+  root.y = h / 2;
+
+
+        // Build the path
+  var defs = vis.insert("svg:defs")
+      .data(["end"]);
+
+
+  defs.enter().append("svg:path")
+      .attr("d", "M0,-5L10,0L0,5");
+
+     update();
+});
+
+
+/**
+ *
+ */
+function update() {
+  var nodes = flatten(root),
+      links = d3.layout.tree().links(nodes);
+
+  // Restart the force layout.
+  force.nodes(nodes)
+        .links(links)
+        .gravity(0.005)
+    .charge(-1500)
+    .linkDistance(175)
+    .friction(0.5)
+    .linkStrength(function(l, i) {return 1; })
+    .size([w/2, h/2])
+    .on("tick", tick)
+        .start();
+
+   var path = vis.selectAll("path.link")
+      .data(links, function(d) { return d.target.id; });
+
+    path.enter().insert("svg:path")
+      .attr("class", "link")
+      // .attr("marker-end", "url(#end)")
+      .style("stroke", "#eee")
+      .style("stroke-width", function(d) {return d.target.score *2;});
+
+
+  // Exit any old paths.
+  path.exit().remove();
+
+
+
+  // Update the nodes…
+  var node = vis.selectAll("g.node")
+      .data(nodes, function(d) { return d.id; });
+
+
+  // Enter any new nodes.
+  var nodeEnter = node.enter().append("svg:g")
+      .attr("class", "node")
+      .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+      .on("click", click)
+      .call(force.drag);
+
+  // Append a circle
+//  nodeEnter.append("svg:circle")
+    //  .attr("r", function(d) { return Math.sqrt(d.size) / 10 || 4.5; })
+    //  .style("fill", "#eee");
+
+
+  // Append images
+  var images = nodeEnter.append("svg:image")
+        .attr("xlink:href",  function(d) { return d.img;})
+        .attr("x", function(d) { return -75;})
+        .attr("y", function(d) { return -75;})
+        .attr("id", function(d) {return d.id;})
+        .attr("height", 100)
+        .attr("width", 100);
+
+  // make the image grow a little on mouse over and add the text details on click
+  var setEvents = images
+          // Append hero text
+          .on( 'click', function (d) {
+              d3.select("h1").html(d.hero);
+              d3.select("h2").html(d.name);
+              d3.select("h3").html ("Take me to " + "<a href='" + d.link + "' >"  + d.hero + " web page ⇢"+ "</a>" );
+           })
+
+          .on( 'mouseenter', function() {
+            // select element in current context
+            d3.select( this )
+              .transition()
+              .attr("x", function(d) { return -150;})
+              .attr("y", function(d) { return -150;})
+              .attr("height", 325)
+              .attr("width", 325);
+          })
+          // set back
+          .on( 'mouseleave', function() {
+            d3.select( this )
+              .transition()
+              .attr("x", function(d) { return -75;})
+              .attr("y", function(d) { return -75;})
+              .attr("height", 100)
+              .attr("width", 100);
+          });
+
+  // Append hero name on roll over next to the node as well
+  nodeEnter.append("text")
+      .attr("class", "nodetext")
+      .attr("x", x_browser)
+      .attr("y", y_browser +45)
+      .attr("fill", tcBlack)
+      .text(function(d) { return d.hero; });
+
+
+  // Exit any old nodes.
+  node.exit().remove();
+
+
+  // Re-select for update.
+  path = vis.selectAll("path.link");
+  node = vis.selectAll("g.node");
+
+function tick() {
+
+
+    path.attr("d", function(d) {
+
+     var dx = d.target.x - d.source.x,
+           dy = d.target.y - d.source.y,
+           dr = Math.sqrt(dx * dx + dy * dy);
+           return   "M" + d.source.x + ","
+            + d.source.y
+            + "A" + dr + ","
+            + dr + " 0 0,1 "
+            + d.target.x + ","
+            + d.target.y;
+  });
+    node.attr("transform", nodeTransform);
+  }
+}
+
+
+/**
+ * Gives the coordinates of the border for keeping the nodes inside a frame
+ * http://bl.ocks.org/mbostock/1129492
+ */
+function nodeTransform(d) {
+  d.x =  Math.max(maxNodeSize, Math.min(w - (d.imgwidth/2 || 16), d.x));
+    d.y =  Math.max(maxNodeSize, Math.min(h - (d.imgheight/2 || 16), d.y));
+    return "translate(" + d.x + "," + d.y + ")";
+   }
+
+/**
+ * Toggle children on click.
+ */
+function click(d) {
+  if (d.children) {
+    d._children = d.children;
+    d.children = null;
+  } else {
+    d.children = d._children;
+    d._children = null;
+  }
+
+  update();
+}
+
+
+/**
+ * Returns a list of all nodes under the root.
+ */
+function flatten(root) {
+  var nodes = [];
+  var i = 0;
+
+  function recurse(node) {
+    if (node.children)
+      node.children.forEach(recurse);
+    if (!node.id)
+      node.id = ++i;
+    nodes.push(node);
+  }
+
+  recurse(root);
+  return nodes;
+}
+
+/**
+*web socket to respond to device to control visualisation
+*/
+var pageReload = false;
+var socket = io ('/otherness-namespace');
+window.onbeforeunload = function() {
+      socket.disconnect(true);
+};
+function reload() {
+  if (pageReload) {
+    location.reload(true);
+  }
+}
+socket.on('reload', function(){
+  setTimeout(reload, 20000);
+});
+
+ socket.on('p1', function(){
+   d3.selectAll("#p2, #p3, #p4, #p5, #p6, #p7, #p8, #p9, #p10, #p11, #p12, #p13, #p14, #p15, #p16")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   d3.select("#p1")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+ socket.on('p2', function(){
+   d3.selectAll("#p1, #p3, #p4, #p5, #p6, #p7, #p8, #p9, #p10, #p11, #p12, #p13, #p14, #p15, #p16")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   d3.select("#p2")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+ socket.on('p3', function(){
+   d3.selectAll("#p1, #p2, #p4, #p5, #p6, #p7, #p8, #p9, #p10, #p11, #p12, #p13, #p14, #p15, #p16")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   d3.select("#p3")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+ socket.on('p4', function(){
+   d3.selectAll("#p1, #p2, #p3, #p5, #p6, #p7, #p8, #p9, #p10, #p11, #p12, #p13, #p14, #p15, #p16")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   d3.select("#p4")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+ socket.on('p5', function(){
+   d3.selectAll("#p1, #p2, #p3, #p4, #p6, #p7, #p8, #p9, #p10, #p11, #p12, #p13, #p14, #p15, #p16")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   d3.select("#p5")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+ socket.on('p6', function(){
+   d3.selectAll("#p1, #p2, #p3, #p4, #p5, #p7, #p8, #p9, #p10, #p11, #p12, #p13, #p14, #p15, #p16")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   d3.select("#p6")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+ socket.on('p7', function(){
+   d3.selectAll("#p1, #p2, #p3, #p4, #p5, #p6, #p8, #p9, #p10, #p11, #p12, #p13, #p14, #p15, #p16")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   d3.select("#p7")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+ socket.on('p8', function(){
+   d3.selectAll("#p1, #p2, #p3, #p4, #p5, #p6, #p7, #p9, #p10, #p11, #p12, #p13, #p14, #p15, #p16")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   d3.select("#p8")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+ socket.on('p9', function(){
+   d3.selectAll("#p1, #p2, #p3, #p4, #p5, #p6, #p7, #p8, #p10, #p11, #p12, #p13, #p14, #p15, #p16")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   d3.select("#p9")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+ socket.on('p10', function(){
+   d3.selectAll("#p1, #p2, #p3, #p4, #p5, #p6, #p7, #p8, #p9, #p11, #p12, #p13, #p14, #p15, #p16")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   d3.select("#p10")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+ socket.on('p11', function(){
+   d3.selectAll("#p1, #p2, #p3, #p4, #p5, #p6, #p7, #p8, #p9, #p10, #p12, #p13, #p14, #p15, #p16")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   d3.select("#p11")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+ socket.on('p12', function(){
+   d3.selectAll("#p1, #p2, #p3, #p4, #p5, #p6, #p7, #p8, #p9, #p10, #p11, #p13, #p14, #p15, #p16")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   d3.select("#p12")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+ socket.on('p13', function(){
+   d3.selectAll("#p1, #p2, #p3, #p4, #p5, #p6, #p7, #p8, #p9, #p10, #p11, #p12, #p14, #p15, #p16")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   d3.select("#p13")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+ socket.on('p14', function(){
+   d3.selectAll("#p1, #p2, #p3, #p4, #p5, #p6, #p7, #p8, #p9, #p10, #p11, #p12, #p13, #p15, #p16")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   console.log('blah')
+   d3.select("#p14")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+ socket.on('p15', function(){
+   d3.selectAll("#p1, #p2, #p3, #p4, #p5, #p6, #p7, #p8, #p9, #p10, #p11, #p12, #p13, #p14, #p16")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   d3.select("#p15")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+ socket.on('p16', function(){
+   d3.selectAll("#p1, #p2, #p3, #p4, #p5, #p6, #p7, #p8, #p9, #p10, #p11, #p12, #p13, #p14, #p15")
+   .transition()
+   .attr("x", function(d) { return -75;})
+   .attr("y", function(d) { return -75;})
+   .attr("height", 100)
+   .attr("width", 100)
+   d3.select("#p16")
+   .transition()
+   .attr("x", function(d) { return -150;})
+   .attr("y", function(d) { return -150;})
+   .attr("height", 325)
+   .attr("width", 325)
+
+ });
+
+</script>
